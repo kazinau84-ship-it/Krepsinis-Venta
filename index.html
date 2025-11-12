@@ -16,7 +16,6 @@
       background: url('https://upload.wikimedia.org/wikipedia/commons/3/3f/Basketball_court_floor.jpg') no-repeat center center fixed;
       background-size: cover;
     }
-
     body::before {
       content: "";
       position: fixed;
@@ -27,19 +26,16 @@
       background: rgba(0, 0, 0, 0.75);
       z-index: -1;
     }
-
     .logo {
       width: 140px;
       margin-bottom: 10px;
       border-radius: 10px;
     }
-
     h1 {
       color: #ff8c00;
       text-align: center;
       margin-bottom: 20px;
     }
-
     .card {
       background-color: rgba(30, 30, 30, 0.95);
       border: 2px solid #ff8c00;
@@ -51,7 +47,6 @@
       box-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
       margin-bottom: 20px;
     }
-
     input, select {
       width: 90%;
       padding: 8px;
@@ -61,7 +56,6 @@
       background-color: #222;
       color: white;
     }
-
     button {
       background-color: #ff8c00;
       border: none;
@@ -72,11 +66,9 @@
       cursor: pointer;
       margin-top: 10px;
     }
-
     button:hover {
       background-color: #ffa733;
     }
-
     table {
       border-collapse: collapse;
       width: 90%;
@@ -87,13 +79,11 @@
       margin-top: 20px;
       color: white;
     }
-
     th, td {
       border: 1px solid #ff8c00;
       padding: 10px;
       text-align: center;
     }
-
     th {
       background-color: #ff8c00;
       color: black;
@@ -138,7 +128,6 @@
     const step2 = document.getElementById('step2');
     const classGroup = document.getElementById('classGroup');
     const teamTable = document.getElementById('teamTable');
-
     let selectedGroup = "";
 
     function nextStep() {
@@ -150,8 +139,56 @@
       step1.style.display = 'none';
       step2.style.display = 'block';
     }
+  </script>
 
-    function submitForm() {
+  <!-- Firebase integracija -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+    // -------------------------
+    // Įklijuok savo Firebase config čia:
+    const firebaseConfig = {
+      apiKey: "AIzaSyAiJGMNT8VRK-fvh5Zy5fg3yNDEkqml6Lc",
+      authDomain: "krepsinisventa.firebaseapp.com",
+      projectId: "krepsinisventa",
+      storageBucket: "krepsinisventa.firebasestorage.app",
+      messagingSenderId: "788008570675",
+      appId: "1:788008570675:web:84b6fc3f8ca5171818b846"
+    };
+    // -------------------------
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function saveTeam(group, teamName, players) {
+      try {
+        await addDoc(collection(db, "teams"), {
+          group: group,
+          teamName: teamName,
+          players: players,
+          timestamp: new Date()
+        });
+        console.log("Komanda įrašyta Firebase!");
+      } catch (error) {
+        console.error("Klaida įrašant į Firebase:", error);
+      }
+    }
+
+    async function loadTeams() {
+      const querySnapshot = await getDocs(collection(db, "teams"));
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const row = teamTable.insertRow();
+        row.insertCell(0).textContent = data.group;
+        row.insertCell(1).textContent = data.teamName;
+        row.insertCell(2).textContent = data.players.join(', ');
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', loadTeams);
+
+    window.submitForm = function() {
       const teamName = document.getElementById('teamName').value.trim();
       const p1 = document.getElementById('player1').value.trim();
       const p2 = document.getElementById('player2').value.trim();
@@ -163,12 +200,18 @@
         return;
       }
 
+      const players = [p1, p2, p3, p4];
+
+      // Įrašome į Firebase
+      saveTeam(selectedGroup, teamName, players);
+
+      // Įrašome į lentelę puslapyje
       const row = teamTable.insertRow();
       row.insertCell(0).textContent = selectedGroup;
       row.insertCell(1).textContent = teamName;
-      row.insertCell(2).textContent = `${p1}, ${p2}, ${p3}, ${p4}`;
+      row.insertCell(2).textContent = players.join(', ');
 
-      // Išvalo formą
+      // Išvalome formą
       document.getElementById('teamName').value = "";
       document.getElementById('player1').value = "";
       document.getElementById('player2').value = "";
@@ -179,7 +222,7 @@
       step2.style.display = 'none';
       step1.style.display = 'block';
       classGroup.value = "";
-    }
+    };
   </script>
 </body>
 </html>
